@@ -34,11 +34,7 @@ jobs:
     
     steps:
     - uses: actions/checkout@v1
-    
-    - name: Build & Push Image
-      env:
-          DOCKER_TOKEN: ${{ env.DOCKER_TOKEN }}
-      run: |
-        echo "${{ secrets.DOCKER_HUB_PASSWD }}" | docker login -u "wseyi" --password-stdin
-        docker image build -t wseyi/java-sample:latest .
-        docker push wseyi/java-sample:latest
+
+    - name: Build the Docker image
+      run: docker build . --file Dockerfile --tag my-image-name:$(date +%s)
+   
