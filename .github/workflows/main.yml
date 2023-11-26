@@ -37,7 +37,7 @@ jobs:
 
     - name: scripting
       run: |
-          "echo trying a script" 
+          echo "trying a script" 
 
     - name: Build the Docker image
       run: docker build . --file Dockerfile --tag my-image-name:$(date +%s)
