@@ -1,0 +1,40 @@
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: jenkins-maven-deployment
+  labels:
+    app: jenkins-maven
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: jenkins-mavin
+  template:
+    metadata:
+      labels:
+        app: jenkins-mavin
+    spec:
+      containers:
+      - name: jenkins-maven
+        image: wseyi/jenkins-maven
+        ports:
+        - containerPort: 3306
+        # env:
+        # - name: jenkins-maven_ROOT_PASSWORD
+        #   valueFrom:
+        #     secretKeyRef:
+        #      name: jenkins-maven-secret
+        #      key: password
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: jenkins-maven
+spec:
+  ports:
+  - port: 3306
+  selector:
+    app: jenkins-maven
+      
+           
