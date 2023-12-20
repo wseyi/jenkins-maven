@@ -60,7 +60,7 @@ jobs:
       env:
          KUBE_CONFIG_DATA: ${{ secrets.KUBE_CONFIG_DATA }}
       with:
-         args: kubectl apply -f manifest-deployment
+         args: kubectl apply -f manifest-deployment/deployment.yaml
 
   verify-deployment:
   
