@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
       - name: jenkins-maven
-        image: wseyi/jenkins-maven
+        image: wseyi/jenkins-maven:${{github.run_number}}-${{github.workflow_sha}}
         ports:
         - containerPort: 3306
         # env:
