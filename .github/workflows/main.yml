@@ -43,10 +43,37 @@ jobs:
       uses: mr-smithers-excellent/docker-build-push@v6
       with:
         image: wseyi/jenkins-maven
-        tags: ${{github.run_number}}-${{github.sha}}
+        tags: ${{github.run_number}}-${{github.workflow_sha}}
         registry: docker.io
         username: ${{ secrets.DOCKER_USERNAME }}
         password: ${{ secrets.DOCKER_PASSWORD }}
+
+
+  deploy-to-cluster:
+
+    needs: docker-build-push
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@master
+    - name: deploy to cluster
+      uses: wahyd4/kubectl-helm-action@master
+      env:
+         KUBE_CONFIG_DATA: ${{ secrets.KUBE_CONFIG_DATA }}
+      with:
+         args: kubectl apply -f manifest-deployment.yaml
+
+  verify-deployment:
+  
+      needs: deploy-to-cluster
+      runs-on: ubuntu-latest
+      steps:
+      - uses: kodermax/kubectl-aws-eks@main
+        env:
+          KUBE_CONFIG_DATA: ${{ secrets.KUBE_CONFIG_DATA }}
+        with:
+           args: rollout status deployment/my-app       
+
+
      
   push-eks:
     
@@ -76,6 +103,7 @@ jobs:
         IMAGE_TAG: ${{ github.sha }}
       with:
         args: set image deployment/$ECR_REPOSITORY $ECR_REPOSITORY=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+              apply -f manifest-deployment/
         
     - name: verify deployment
       uses: kodermax/kubectl-aws-eks@main
