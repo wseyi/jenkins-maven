@@ -54,13 +54,17 @@ jobs:
     needs: docker-build-push
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@master
-    - name: deploy to cluster
-      uses: wahyd4/kubectl-helm-action@master
-      env:
-         KUBE_CONFIG_DATA: ${{ secrets.KUBE_CONFIG_DATA }}
-      with:
-         args: kubectl apply -f manifest-deployment/deployment.yaml
+    - name: Checkout code
+      uses: actions/checkout@v2
+    - name: Create kubeconfig
+      run: |
+        mkdir ${HOME}/.kube
+        echo ${{ secrets.KUBE_CONFIG_DATA }} | base64 --decode > ${HOME}/.kube/config
+        cat ${HOME}/.kube/config
+    - name: Use context
+      run: kubectl config use-context minikube
+    - name: Deploy to K8s
+      run: kubectl apply -f manifest-deployment/
 
   verify-deployment:
   
@@ -74,40 +78,4 @@ jobs:
            args: rollout status deployment/my-app       
 
 
-     
-  push-eks:
     
-    needs: docker-build-push
-    runs-on: ubuntu-latest
-    steps:
-    - name: Checkout
-      uses: actions/checkout@v2
-
-    - name: Configure AWS credentials
-      uses: aws-actions/configure-aws-credentials@v1
-      with:
-        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-region: eu-north-1
-    
-    - name: Login to Amazon ECR
-      id: login-ecr
-      uses: aws-actions/amazon-ecr-login@v1
-
-    - name: deploy to cluster
-      uses: kodermax/kubectl-aws-eks@main
-      env:
-        KUBE_CONFIG_DATA: ${{ secrets.KUBE_CONFIG_DATA }}
-        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-        ECR_REPOSITORY: my-app
-        IMAGE_TAG: ${{ github.sha }}
-      with:
-        args: set image deployment/$ECR_REPOSITORY $ECR_REPOSITORY=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
-              apply -f manifest-deployment/
-        
-    - name: verify deployment
-      uses: kodermax/kubectl-aws-eks@main
-      env:
-        KUBE_CONFIG_DATA: ${{ secrets.KUBE_CONFIG_DATA }}
-      with:
-        args: rollout status deployment/my-app
